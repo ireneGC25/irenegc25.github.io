@@ -1,0 +1,288 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title> JUEGO </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  </head>
+  <body>
+  <script>
+ 
+//Calendario
+  let dia, mes , anio ;
+
+//Sol
+  let x_s, y_s , v_s , d_s ;
+
+//Luna
+  let x_l , y_l , v_l , d_l;
+  
+//Persona
+  let x_p , y_p , d_p , S ;
+
+  
+// salto
+let ground_y , v_y , jump_v , g ; 
+
+//monigote
+ let rHead , bodyL , armL , legL , hipY , shoulderY , headY ;
+ 
+//Disparo
+let x_d , y_d , t_d , v_d , disparo_activo ;
+
+//
+let x_o , y_o , w_o , h_o , v_o;
+
+//
+let puntos;
+
+function setup() {
+    createCanvas(400, 500);
+    background(0,0,0);
+
+//Puntos de partida
+dia = 1;
+mes = 1;
+anio = 2025;
+
+//Tamaños relativos y posiciones iniciales
+ d_s = width*0.10;      r_s = d_s *0.5;
+ x_s = -r_s;            y_s = height*0.20;
+ d_l = width * 0.1 ;    r_l = d_l * 0.5;
+ x_l = -1.1*width - r_l ;     y_l = y_s;
+ x_p = width/3.5     ;  y_p = 0.6 * height; 
+ d_p = d_s/3 ;
+ S  = 0.12 * min(width, height); 
+ rHead =0.20 * S;
+ bodyL = 0.60 * S;
+ armL  = 0.45 * S;
+ legL  = 0.55 * S;
+ x_d = width/ 4 ;
+ y_d = height*0.6;
+ disparo_activo = false;
+ y_o = height *0.10;
+ x_o = 0.2*height;
+ w_o = 60;
+ h_o =30;
+ t_d= 10
+ puntos = 0;
+ 
+
+ 
+ //Velocidades
+  v_s = width/300;
+  v_l = width/300;
+  v_d = width/100;
+  v_o = random();
+ 
+ // Suelo 
+ground_y = 0.80 * height;
+
+// Persona
+S  = 0.12 * min(width, height);
+x_p = 0.25 * width;
+y_p = ground_y;                
+
+// Movimiento horizontal
+v_p = width / 150;
+
+// Salto
+v_y = 0;
+jump_v = -0.030 * height;      
+g = 0.0016 * height;          
+ }
+ 
+  function draw() {
+   
+  hipY = y_p - legL; 
+  shoulderY = hipY - bodyL;
+ headY = shoulderY - rHead;
+
+ //Cielo
+  if (x_s < width + r_s) {
+    //día
+    background(0, 191, 255);}
+else {
+    //noche
+    background(0);  }              
+ 
+ 
+ // Luna
+ fill(248, 248, 255);
+stroke(0,0,0);
+circle(x_l , y_l , d_l);
+ 
+
+ //SOL
+    fill(255,210,0);
+stroke(0, 191, 255);
+circle(x_s , y_s , d_s);
+
+   if (x_s > 2*width + r_s)
+   {x_s = -r_s;
+    x_l = -1.1*width - r_l;
+    dia=dia+1;
+	 if(dia > 31){
+     dia= 1;
+     mes= mes + 1;
+      }
+ 
+     if(mes >= 12){
+     dia= 1;
+     mes= 1;
+     anio = anio + 1;
+     }
+    }
+   else {x_s = x_s + v_s;
+    x_l = x_l + v_l;}
+	
+
+actualizarCalendario();
+
+
+dibujarStickman();
+
+
+
+
+//Césped
+  noStroke();
+  fill(0, 100, 0);
+  rect(0, 0.8*height , width, 0.3*height);
+  
+//MOVIMIENTO IZQUIERDA/DERECHA
+if (keyIsDown(LEFT_ARROW)) {
+  x_p = x_p - v_p;
+} else if (keyIsDown(RIGHT_ARROW)) {
+  x_p = x_p + v_p;
+}
+if (x_p < 0) {
+  x_p = 0;
+}
+if (x_p > width) {
+  x_p = width;
+}
+//MOVIMIENTO vertical
+ v_y = v_y + g;
+ y_p = y_p + v_y;
+ 
+ if(y_p > ground_y){
+ y_p = ground_y;
+ v_y = 0;
+ }
+ 
+ 
+ //MOVIMIENTO Disparo
+ if ( disparo_activo === true){
+    y_d = y_d - v_d;
+	}
+ if(y_d < -t_d) {
+	disparo_activo = false;
+	}
+	
+dibujarDisparo(); 
+dibujarObjetivo();
+
+
+//MOVIMIENTO DEL OBJETIVO
+if( x_o > width){
+x_o = 0}
+
+if(x_o < width){
+x_o = x_o + v_o}
+
+dibujarContador();
+
+//COLISIÓN
+if(disparo_activo === true){
+    if(Math.abs(x_d - x_o) < 60 && Math.abs(y_d - y_o) < 30){
+     disparo_activo = false;
+     puntos = puntos + 1;}
+}
+
+
+ }
+
+  
+  
+  
+  function keyPressed() {
+  if (keyCode === UP_ARROW) {
+    // Solo saltamos si estamos en el suelo
+    if (y_p === ground_y) {
+      v_y = jump_v;}
+  }
+  
+   if (keyCode === 32) {
+    // Solo saltamos si estamos en el suelo
+    if (disparo_activo === false)
+	{
+	x_d = x_p;
+	y_d = y_p;
+	disparo_activo=true;
+	}
+  }
+    }  
+    
+	
+	
+function dibujarStickman() {
+//PERSONA
+ stroke(255,0,0);
+strokeWeight(0.06 * S);
+noFill();
+
+   // Cabeza
+   circle(x_p, headY, 2 * rHead);
+
+  // Tronco
+  line(x_p, shoulderY, x_p, hipY);
+
+  // Brazos 
+   line(x_p - 0.25*S, shoulderY, x_p + 0.25*S, shoulderY);
+   line(x_p - 0.25*S, shoulderY, x_p - 0.25*S, shoulderY + armL);
+   line(x_p + 0.25*S, shoulderY, x_p + 0.25*S, shoulderY + armL);
+
+    // Piernas
+    line(x_p, hipY, x_p - 0.18*S, y_p);
+    line(x_p, hipY, x_p + 0.18*S, y_p);
+	}
+	
+	
+function actualizarCalendario() {
+//calendario
+noStroke();
+if (x_s <= width + r_s) { fill(0);   } // día
+else { fill(255); } // noche
+textSize(20);
+text("Fecha: (" + dia + ") (" + mes + ") (" + anio + ")", 10, 20);
+
+}
+
+
+function dibujarDisparo() {
+if(disparo_activo === true){
+//Disparo
+  circle ( x_d , y_d, t_d );
+ }
+ }
+function dibujarObjetivo(){
+fill(255, 127, 80);
+noStroke();
+rect(x_o, y_o ,w_o , h_o);
+ }
+ 
+function dibujarContador(){
+textAlign (LEFT, BOTTOM);
+fill(127,255,0);
+text("Puntos:" + puntos, width/20, height/10);
+} 
+
+
+  
+
+</script>
+
+ </body>
+ </html>
